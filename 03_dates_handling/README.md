@@ -1,6 +1,8 @@
-# Date and time handling in PostgreSQL
+# Date and Time Handling in PostgreSQL
 
-This directory documents PostgreSQL equivalents for common SQL Server date and time functions used while completing the *SQL for Healthcare Professionals* course. The course demonstrations use SQL Server/T-SQL; [`01_dates_handling.sql`](01_dates_handling.sql) adapts the relevant logic for PostgreSQL.
+This directory documents PostgreSQL equivalents for common SQL Server date and time functions used while completing the LinkedIn Learning course [SQL for Healthcare Professionals](https://www.linkedin.com/learning-login/share?forceAccount=false&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fsql-for-healthcare-professionals%3Ftrk%3Dshare_ent_url%26shareId%3D8Ql8AgwDQnWmtkJD99ZSUw%253D%253D).
+
+> ⚠️ Course demonstrations used Microsoft SQL Server and SQL Server Management Studio (SSMS). As I was not proficient in using them, I relied on **PostgreSQL**, **pgAdmin 4**, and **Visual Studio Code**.
 
 ## Contents
 
@@ -8,7 +10,7 @@ This directory documents PostgreSQL equivalents for common SQL Server date and t
 |---|---|
 | [`01_dates_handling.sql`](01_dates_handling.sql) | Example PostgreSQL queries covering current date/time values, date parts, formatted date names, elapsed time, and age calculation. |
 
-## Current date and time
+## Current Date and Time
 
 | Purpose | SQL Server | PostgreSQL |
 |---|---|---|
