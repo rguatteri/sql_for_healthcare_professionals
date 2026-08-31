@@ -1,12 +1,14 @@
-# PostgreSQL setup and data import
+# PostgreSQL Setup and Data Import
 
-This directory documents the setup used to reproduce the analyses from the LinkedIn Learning course *SQL for Healthcare Professionals* in a local PostgreSQL database. The workflow used **PostgreSQL**, **pgAdmin 4**, and **Visual Studio Code** rather than the SQL Server/SSMS environment used in the course demonstrations.
+This directory documents the setup process I followed to reproduce the analyses from the LinkedIn Learning course [SQL for Healthcare Professionals](https://www.linkedin.com/learning-login/share?forceAccount=false&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fsql-for-healthcare-professionals%3Ftrk%3Dshare_ent_url%26shareId%3D8Ql8AgwDQnWmtkJD99ZSUw%253D%253D) in a local PostgreSQL database.
+
+> ⚠️ Course demonstrations used Microsoft SQL Server and SQL Server Management Studio (SSMS). As I was not proficient in using them, I relied on **PostgreSQL**, **pgAdmin 4**, and **Visual Studio Code**.
 
 ## Contents
 
 | File | Purpose |
 |---|---|
-| `01_create_tables.sql` | Creates the tables used in the project and assigns ownership to the `postgres` role. |
+| [01_create_tables.sql](https://github.com/rguatteri/sql_for_healthcare_professionals/blob/main/01_setup/01_create_tables.sql) | Creates the tables used in the project and assigns ownership to the `postgres` role. |
 | `02_modify_tables.sql` | Loads/prepares the project data after file paths have been updated for the local machine. |
 
 ## Prerequisites
