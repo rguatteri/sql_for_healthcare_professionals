@@ -8,8 +8,8 @@ This directory documents the setup process I followed to reproduce the analyses 
 
 | File | Purpose |
 |---|---|
-| [01_create_tables.sql](https://github.com/rguatteri/sql_for_healthcare_professionals/blob/main/01_setup/01_create_tables.sql) | Creates the tables used in the project and assigns ownership to the `postgres` role. |
-| `02_modify_tables.sql` | Loads/prepares the project data after file paths have been updated for the local machine. |
+| [`01_create_tables.sql`](01_create_tables.sql) | Creates the tables used in the project and assigns ownership to the `postgres` role. |
+| [`02_modify_tables.sql`](02_modify_tables.sql) | Loads and prepares the project data after file paths have been updated for the local machine. |
 
 ## Prerequisites
 
@@ -18,25 +18,25 @@ This directory documents the setup process I followed to reproduce the analyses 
 - A PostgreSQL database created for this project (for example, `sql_healthcare`)
 - The course `.xlsx` source files downloaded locally
 
-## 1. Prepare the source files
+## 1. Prepare the Source Files
 
-pgAdmin 4's **Import/Export Data** dialog does not import Excel workbooks (`.xlsx`) directly. Its standard import workflow supports CSV, text, and PostgreSQL binary files, and imports data into an **existing table** rather than directly into a database.
+Unlike SSMS, pgAdmin 4's **Import/Export Data** dialog does **not** import Excel workbooks (`.xlsx`) directly. Instead, its standard import workflow supports CSV, text, and PostgreSQL binary files. Importantly, pgAdmin 4 imports data into an **existing table** rather than directly into a database. In light of this, each course workbook was first converted to **CSV UTF-8 (Comma delimited) (`.csv`)** in Excel.
 
-Therefore, each course workbook was first converted to **CSV UTF-8 (Comma delimited) (`.csv`)** in Excel. If a workbook has multiple worksheets, export each required worksheet separately.
+> Each workbook had just one worksheet, hence the process was relatively easy. However, had a workbook had multiple worksheets, each required worksheet would have had to be exported separately.
 
-Before importing a CSV, inspect it in Excel or a text editor:
+Before importing a CSV, it is advisable to inspect it in Excel or a text editor. Therefore, I went through the following checks:
 
-1. Ensure the first row contains the column names (for example, `patient_id`, `age`, and `diagnosis`).
-2. Use clear, unique column names; avoid spaces and unnecessary special characters where possible.
-3. Check missing values. In the original `outpatient_visits` file, missing values in `diagnosis` and `medication_prescribed` were replaced with `N/A` before import.
-4. Standardise date values. The source CSV files used inconsistent date formats, so all dates were converted to ISO 8601 format: `YYYY-MM-DD`.
-5. Ensure identifiers are preserved as intended. In particular, Excel can remove leading zeroes from IDs; this did not affect this project, but it is an important check for other datasets.
+1. Ensure the first row contains the column names (for example, `patient_id`, `age`, and `diagnosis`);
+2. Use clear, unique column names: avoid spaces and unnecessary special characters where possible;
+3. Check missing values: in the original `outpatient_visits` file, missing values in `diagnosis` and `medication_prescribed` were replaced with `N/A` before import;
+4. Standardise date values: the source files used inconsistent date formats, hence all dates were converted to ISO 8601 format: `YYYY-MM-DD`.
+5. Ensure identifiers are preserved as intended, as Excel can remove leading zeroes from IDs (this did not affect this project, but it is an important check for other datasets).
 
-> **Note:** Replacing missing values with `N/A` is appropriate for a learning dataset and can make import simpler, but in a production or research workflow, preserving missing values as SQL `NULL` is usually preferable.
+> **N.B.** Replacing missing values with `N/A` is appropriate for a learning dataset and can make import simpler, but in a production or research workflow, preserving missing values as SQL `NULL` is usually preferable.
 
-## 2. Create the table schemas
+## 2. Create the Table Schemas
 
-Run [`01_create_tables.sql`](01_create_tables.sql) against the project database. The script creates the tables before any data are loaded and assigns their ownership to the `postgres` user.
+For a first, simple import, run [`01_create_tables.sql`](01_create_tables.sql) against the project database. This script creates the tables before any data are loaded, and assigns their ownership to the `postgres` user.
 
 Choose data types that match the source file:
 
@@ -48,9 +48,7 @@ Choose data types that match the source file:
 | Calendar dates | `DATE` |
 | Dates and times | `TIMESTAMP` |
 
-Creating the schema first is important: CSV import tools load rows into a pre-existing table and do not infer a robust table design for you.
-
-## 3. Load CSV data with `psql`
+## 3. Load CSV Data with `psql`
 
 A server-side `COPY` command such as the following initially failed:
 
@@ -72,11 +70,11 @@ The successful workaround was to use pgAdmin's **PSQL Tool** and the client-side
 
 ### Steps
 
-1. If a clean restart is needed, drop the existing database with `DROP DATABASE IF EXISTS ...`, recreate it, and rerun the schema-creation script.
-2. Open pgAdmin 4 and navigate to the target database in **Object Explorer**.
-3. Right-click the database and select **PSQL Tool**.
-4. Obtain the absolute path for every CSV file. In VS Code, right-click the file and select **Copy Path**.
-5. Open `02_modify_tables.sql`, replace each placeholder with the correct local path, and paste/run the commands in PSQL Tool.
+1. If a clean restart is needed, drop the existing database with `DROP DATABASE IF EXISTS ...`, then recreate it and rerun [`01_create_tables.sql`](01_create_tables.sql);
+2. Open pgAdmin 4 and navigate to the target database in **Object Explorer**;
+3. Right-click the database and select **PSQL Tool** (which opens a terminal window to write code);
+4. Obtain the absolute path for every CSV file (in **VS Code**, right-click the file and select **Copy Path**);
+5. Replace each placeholder in [`02_modify_tables.sql`](02_modify_tables.sql) with the correct local path, then paste and run the commands in PSQL Tool;
 6. Confirm that the load succeeded by checking the row counts, for example:
 
 ```sql
@@ -84,16 +82,12 @@ SELECT COUNT(*) AS row_count
 FROM appointment_analysis;
 ```
 
-## Verification checklist
+## Verification Checklist
 
 After loading the data, verify that:
 
-- All expected tables appear under the database schema.
-- Row counts match the source files.
-- Dates load as `DATE` values rather than text.
-- Key identifiers, such as `patient_id` and `visit_id`, are present and retain their expected values.
+- All expected tables appear under the database schema;
+- Row counts match the source files;
+- Dates load as `DATE` values rather than text;
+- Key identifiers, such as `patient_id` and `visit_id`, are present and retain their expected values;
 - Queries can be run from VS Code through the PostgreSQL connection.
-
-## Reproducibility and privacy
-
-The CSV source files and absolute local paths are intentionally not committed to this repository. Absolute paths are machine-specific and may disclose usernames or local directory structure. Anyone reproducing this project should download the course material independently, perform the preparation steps above, and update the local paths in `02_modify_tables.sql`.
