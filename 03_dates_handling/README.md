@@ -1,6 +1,8 @@
-# Date and time handling in PostgreSQL
+# Date and Time Handling in PostgreSQL
 
-This directory documents PostgreSQL equivalents for common SQL Server date and time functions used while completing the *SQL for Healthcare Professionals* course. The course demonstrations use SQL Server/T-SQL; [`01_dates_handling.sql`](01_dates_handling.sql) adapts the relevant logic for PostgreSQL.
+This directory documents PostgreSQL equivalents for common SQL Server date and time functions used while completing the LinkedIn Learning course [SQL for Healthcare Professionals](https://www.linkedin.com/learning-login/share?forceAccount=false&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fsql-for-healthcare-professionals%3Ftrk%3Dshare_ent_url%26shareId%3D8Ql8AgwDQnWmtkJD99ZSUw%253D%253D).
+
+> ⚠️ Course demonstrations used Microsoft SQL Server and SQL Server Management Studio (SSMS). As I was not proficient in using them, I relied on **PostgreSQL**, **pgAdmin 4**, and **Visual Studio Code**.
 
 ## Contents
 
@@ -8,45 +10,54 @@ This directory documents PostgreSQL equivalents for common SQL Server date and t
 |---|---|
 | [`01_dates_handling.sql`](01_dates_handling.sql) | Example PostgreSQL queries covering current date/time values, date parts, formatted date names, elapsed time, and age calculation. |
 
-## Current date and time
+## Current Date and Time
+
+| Purpose | SQL Server | PostgreSQL | Example |
+|---|---|---|---|
+| System's current timestamp without time-zone information | `GETDATE()` | `LOCALTIMESTAMP` | `2026-08-25 13:14:44.397821` |
+| System's current timestamp with time-zone information | — | `NOW()` or `CURRENT_TIMESTAMP` | `2026-08-25 13:14:44.397821+00` |
+| System's current date only | `CAST(GETDATE() AS DATE)` | `CURRENT_DATE` | `2026-08-25` |
+
+> `GETDATE()` returns SQL Server's current timestamp as a `datetime` value. In PostgreSQL, `LOCALTIMESTAMP` is the closest equivalent because it returns a `timestamp without time zone` value. `NOW()` and `CURRENT_TIMESTAMP` are interchangeable PostgreSQL expressions that return a `timestamp with time zone` value.
+
+### Usage
+
+```sql
+SELECT LOCALTIMESTAMP AS system_timestamp;
+```
+
+```sql
+SELECT NOW() AS system_timestamp;
+-- Equivalent:
+SELECT CURRENT_TIMESTAMP AS system_timestamp;
+```
+
+```sql
+SELECT CURRENT_DATE AS system_date;
+```
+
+## Extract a Date Part
 
 | Purpose | SQL Server | PostgreSQL |
 |---|---|---|
-| Current timestamp, no time-zone offset | `GETDATE()` | `LOCALTIMESTAMP` |
-| Current timestamp with time-zone information | — | `NOW()` or `CURRENT_TIMESTAMP` |
-| Current date only | `CAST(GETDATE() AS DATE)` | `CURRENT_DATE` |
+| Extract a date part | `DATEPART(interval, date)` | `DATE_PART('field', source)` or `EXTRACT(field FROM source)` |
 
-`GETDATE()` returns SQL Server's current system timestamp as a `datetime` value without a time-zone offset. In PostgreSQL, `LOCALTIMESTAMP` is the closest equivalent because it returns a `timestamp without time zone`, for example `2026-08-25 13:14:44.397821`.
+SQL Server uses `DATEPART(interval, date)`:
+- The `interval` argument is the output that you want the query to retrieve (e.g., weekdays);
+- The `date` argument is the column you're retrieving the information from.
 
-```sql
-SELECT LOCALTIMESTAMP AS local_timestamp;
-SELECT CURRENT_DATE AS current_date;
-```
-
-`NOW()` and `CURRENT_TIMESTAMP` are interchangeable PostgreSQL expressions that return a `timestamp with time zone`, for example `2026-08-25 13:14:44.397821+00`. They represent the start time of the current transaction.
+PostgreSQL provides two equivalents:
 
 ```sql
-SELECT NOW() AS current_timestamp;
--- Equivalent:
-SELECT CURRENT_TIMESTAMP AS current_timestamp;
+SELECT DATE_PART(`field`, source);
+SELECT EXTRACT(field FROM source);
 ```
 
-## Extract a date part
+> **N.B.** `DATE_PART(field, source)` requires the `field` argument to be quoted. In contrast, in `EXTRACT(field FROM source)`, `field` is an unquoted identifier.
 
-SQL Server uses `DATEPART(interval, date)`. PostgreSQL provides two equivalents:
+Some date parts' keywords carry over differently between SQL Server's DATEPART() and PostgreSQL's DATE_PART() and EXTRACT():
 
-```sql
--- SQL Server
-SELECT DATEPART(weekday, appointment_date);
-
--- PostgreSQL
-SELECT date_part('dow', appointment_date);
-SELECT EXTRACT(DOW FROM appointment_date);
-```
-
-`date_part(field, source)` requires the `field` argument to be quoted. In `EXTRACT(field FROM source)`, the field is an unquoted identifier.
-
-| SQL Server datepart | PostgreSQL field |
+| SQL Server | PostgreSQL |
 |---|---|
 | `DAYOFYEAR` | `doy` |
 | `WEEKDAY` | `dow` |
@@ -54,56 +65,74 @@ SELECT EXTRACT(DOW FROM appointment_date);
 | `MI` | `minute` |
 | `SS` | `second` |
 
-PostgreSQL's `dow` uses `0` for Sunday through `6` for Saturday. SQL Server's `DATEPART(weekday, ...)` numbering depends on `SET DATEFIRST`; with Sunday as the first day, Sunday is `1`, Monday is `2`, and Saturday is `7`.
+> ⚠️ PostgreSQL's `dow` uses `0` for Sunday through `6` for Saturday. In contrast, SQL Server's `DATEPART(weekday, ...)` numbering depends on `SET DATEFIRST`; with Sunday as the first day, Sunday is `1`, Monday is `2`, and Saturday is `7`.
 
-## Return date names
-
-SQL Server's `DATENAME()` returns a date part as text. PostgreSQL uses `to_char()` for names and `EXTRACT()` for numeric components.
-
-| Task | SQL Server | PostgreSQL |
-|---|---|---|
-| Full month name | `DATENAME(month, d)` | `trim(to_char(d, 'Month'))` |
-| Full weekday name | `DATENAME(weekday, d)` | `trim(to_char(d, 'Day'))` |
-| Numeric year | `DATENAME(year, d)` | `EXTRACT(YEAR FROM d)` |
-| Numeric day as text | `DATENAME(day, d)` | `CAST(EXTRACT(DAY FROM d) AS TEXT)` |
-
-`to_char()` uses format patterns; their casing controls the output casing. For example, `'Day'`, `'DAY'`, and `'day'` return capitalised, upper-case, and lower-case weekday names, respectively. `'Dy'` returns an abbreviated weekday name.
-
-Patterns such as `Month` and `Day` are blank-padded to nine characters by default. Use `trim()` before displaying, grouping, filtering, or joining on their output.
+### Usage
 
 ```sql
 SELECT
-    trim(to_char(appointment_date, 'Day')) AS weekday_name,
-    trim(to_char(appointment_date, 'Month')) AS month_name
+    appointment_date,
+    DATE_PART('DOW', appointment_date) + 1 AS day_of_the_week
+FROM
+    appointment_analysis;
+```
+
+## Return Date Names
+
+| Task | SQL Server | PostgreSQL |
+|---|---|---|
+| Named part | `DATENAME(month, d)` | `TRIM(TO_CHAR(d, 'Month'))` |
+| Numeric part | `DATENAME(year, d)` | `EXTRACT(YEAR FROM d)` |
+| Numeric part as text | `DATENAME(day, d)` | `CAST(EXTRACT(DAY FROM d) AS TEXT)` |
+
+> **N.B.** SQL Server's `DATENAME()` (using the same arguments as `DATEPART()`) always returns a string, whether it is a name (e.g., August for MONTH) or a number (e.g., 26 for DAY). PostgreSQL splits this behavior into two different tools, using `TO_CHAR()` for names and `EXTRACT()` for numeric components. Additionally, `CAST(EXTRACT() AS TEXT)` can be used to obtain a numeric part as text.
+
+`TO_CHAR()` uses format patterns, hence their casing controls the output casing. For example, `'Day'`, `'DAY'`, and `'day'` return capitalised, upper-case, and lower-case weekday names, respectively. `'Dy'` returns an abbreviated weekday name.
+
+| Pattern | Example Output |
+|---|---|
+| `Day` | `Monday` |
+| `DAY` | `MONDAY` |
+| `Dy` | `Mon` |
+| `dy` | `mon` |
+
+> `TO_CHAR()`'s `Month` and `Day` patterns are blank-padded to nine characters by default. For instance, 'August' actually comes back as 'August ' (i.e., with trailing spaces). To address this issue, use `TRIM()` before displaying, grouping, filtering, or joining on their output.
+
+### Usage
+
+```sql
+SELECT
+    appointment_date,
+    TRIM(TO_CHAR(appointment_date, 'Day')) AS day_of_the_week
 FROM appointment_analysis;
 ```
 
-## Calculate elapsed time
+## Compute Elapsed Time
 
-PostgreSQL has no direct `DATEDIFF()` equivalent. The appropriate method depends on the data type and desired unit.
+PostgreSQL has no direct `DATEDIFF()` equivalent. The appropriate method to compute elapsed time depends on the data type and desired unit.
 
 ### Difference between `DATE` values
 
 Subtract dates directly, placing the later date first for a positive elapsed-day count.
 
 ```sql
--- SQL Server
-SELECT DATEDIFF(day, admission_date, discharge_date) AS length_of_stay_days;
-
--- PostgreSQL
-SELECT discharge_date - admission_date AS length_of_stay_days;
+SELECT
+    (later_date - earlier_date) AS date_difference
+FROM
+    table;
 ```
 
-Literal dates need an explicit date type. Without quotes, `2024-01-10` is treated as an arithmetic expression rather than a date.
+Subtracting literal dates (instead of referencing columns that are already typed as date or timestamp) needs these dates to be explicitly casted. Without quotes, `2024-01-10` is treated as an arithmetic expression rather than a date.
 
 ```sql
-SELECT DATE '2024-01-10' - DATE '2024-01-01' AS date_difference;
+SELECT
+    (DATE '2024-01-10' - DATE '2024-01-01') AS date_difference;
 -- Returns 9
 ```
 
 ### Difference between `TIMESTAMP` values
 
-Timestamp subtraction returns an `interval`. `EXTRACT(EPOCH FROM ...)` retrieves total elapsed seconds; divide by `60` for minutes or `3600` for hours.
+Timestamp subtraction returns an `interval`. `EXTRACT(EPOCH FROM ...)` retrieves total elapsed seconds: divide by `60` for minutes or `3600` for hours.
 
 ```sql
 SELECT
@@ -113,25 +142,38 @@ SELECT
 FROM outpatient_visits;
 ```
 
-## Calculate patient age
+```sql
+SELECT
+    appointment_time,
+    arrival_time,
+    ROUND((EXTRACT(EPOCH FROM (appointment_time - arrival_time)) / 60), 0) AS minutes_difference
+FROM
+    appointment_analysis;
+```
+
+## Compute Age
 
 This expression calculates age in completed years through integer division:
 
 ```sql
-SELECT (CURRENT_DATE - date_of_birth) / 365 AS age
-FROM patients_table;
+SELECT
+    (CURRENT_DATE - date_of_birth) / 365 AS age
+FROM
+    patients_table;
 ```
 
-PostgreSQL truncates the fractional result because both operands are integers: 49.9 years becomes `49`. For a calendar-accurate age that accounts for birthdays and leap years, use `age()`:
+> **N.B.** PostgreSQL truncates the fractional result because both operands are integers: 49.9 years becomes `49`. For a calendar-accurate age that accounts for birthdays and leap years, use `AGE()`.
 
 ```sql
-SELECT EXTRACT(YEAR FROM age(date_of_birth)) AS age
-FROM patients_table;
+SELECT
+    EXTRACT(YEAR FROM AGE(date_of_birth)) AS age
+FROM
+    patients_table;
 ```
 
-## Practical guidance
+## Practical Guidance
 
-- Use `CURRENT_DATE` for date-only comparisons and `NOW()`/`CURRENT_TIMESTAMP` when time-zone context matters.
-- Prefer `EXTRACT()` for readable analytical SQL; use `date_part()` when its function-call style is more convenient.
-- Use `trim(to_char(...))` for formatted month/day labels to avoid blank-padding issues.
+- Use `CURRENT_DATE` for date-only comparisons and `NOW()`/`CURRENT_TIMESTAMP` when time-zone context matters;
+- Prefer `EXTRACT()` for readable analytical SQL; use `DATE_PART()` when its function-call style is more convenient;
+- Use `TRIM(TO_CHAR(...))` for formatted month/day labels to avoid blank-padding issues;
 - For clinical duration measures, distinguish elapsed time (`end - start`) from calendar boundaries crossed; the distinction can alter results.
