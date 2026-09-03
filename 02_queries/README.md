@@ -1,10 +1,10 @@
 # Healthcare SQL queries
 
-This directory contains the PostgreSQL queries I developed while completing the LinkedIn Learning course [SQL for Healthcare Professionals](https://www.linkedin.com/learning-login/share?forceAccount=false&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fsql-for-healthcare-professionals%3Ftrk%3Dshare_ent_url%26shareId%3D8Ql8AgwDQnWmtkJD99ZSUw%253D%253D). These scripts were adapted and executed against the local PostgreSQL database, which I set up as described in [`../01_setup/`](../01_setup/).
+This directory contains the PostgreSQL queries I developed while completing the LinkedIn Learning course [SQL for Healthcare Professionals](https://www.linkedin.com/learning-login/share?forceAccount=false&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fsql-for-healthcare-professionals%3Ftrk%3Dshare_ent_url%26shareId%3D8Ql8AgwDQnWmtkJD99ZSUw%253D%253D), taught by Thais Cooke. These scripts were adapted and executed against the local PostgreSQL database, which I set up as described in [`../01_setup/`](../01_setup/).
 
 > Query-level analytical objectives are documented in the repository's main README. Here I focus on the query structure, execution context, and PostgreSQL-specific technical notes, with a focus on [`01_demographics.sql`](01_demographics.sql) and [`06_risk.sql`](06_risk.sql).
 
-> ⚠️ Course demonstrations used Microsoft SQL Server and SQL Server Management Studio (SSMS). As I was not proficient in using them, I relied on **PostgreSQL**, **pgAdmin 4**, and **Visual Studio Code**.
+> ⚠️ Course demonstrations used Microsoft SQL Server and SQL Server Management Studio (SSMS). As I was not proficient in using them, I completed this project in **PostgreSQL**, using **pgAdmin 4** for database administration and **Visual Studio Code** for query development.
 
 ## Contents
 
